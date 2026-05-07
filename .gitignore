@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Uploads (user content)
+uploads/students/*
+!uploads/students/.gitkeep
+
+# Environment
+.env
+
+# OS
+.DS_Store
+Thumbs.db
