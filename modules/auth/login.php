@@ -81,11 +81,11 @@ $error = $_GET['error'] ?? '';
                         >
                         <button
                             type="button"
-                            onclick="togglePassword()"
+                            onclick="togglePw('password', this)"
                             class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition text-base"
                             tabindex="-1"
                         >
-                            <i id="eye-icon" class="bi bi-eye"></i>
+                            <i class="bi bi-eye text-sm"></i>
                         </button>
                     </div>
                 </div>
@@ -119,15 +119,5 @@ $error = $_GET['error'] ?? '';
     </div>
 
 </div>
-
-<script>
-function togglePassword() {
-    const input = document.getElementById('password');
-    const icon  = document.getElementById('eye-icon');
-    const show  = input.type === 'password';
-    input.type  = show ? 'text' : 'password';
-    icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
-}
-</script>
 
 <?php require_once $basePath . 'includes/footer.php'; ?>

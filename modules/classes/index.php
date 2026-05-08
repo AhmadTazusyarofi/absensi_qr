@@ -14,11 +14,78 @@ $totalPages = 1;
 $totalKelas = 0;
 $totalGuru  = 0;
 $totalSiswa = 0;
+$guruList   = [];
 $dbError    = null;
+
+$createErrors = [];
+$editErrors   = [];
+$openModal    = '';
+$editData     = null;
 
 try {
     $pdo = getDB();
 
+    // Handle CREATE
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'create') {
+        $namaKelas   = trim($_POST['nama_kelas'] ?? '');
+        $tingkat     = trim($_POST['tingkat'] ?? '');
+        $tahunAjaran = trim($_POST['tahun_ajaran'] ?? '');
+        $waliKelasId = ((int) ($_POST['wali_kelas_id'] ?? 0)) ?: null;
+
+        if ($namaKelas === '') $createErrors[] = 'Nama kelas wajib diisi.';
+        if ($tingkat   === '') $createErrors[] = 'Tingkat wajib dipilih.';
+
+        if ($namaKelas !== '') {
+            $chk = $pdo->prepare('SELECT id FROM kelas WHERE nama_kelas = ?');
+            $chk->execute([$namaKelas]);
+            if ($chk->fetch()) $createErrors[] = 'Nama kelas sudah digunakan.';
+        }
+
+        if (empty($createErrors)) {
+            $stmt = $pdo->prepare('INSERT INTO kelas (nama_kelas, tingkat, tahun_ajaran, wali_kelas_id) VALUES (?, ?, ?, ?)');
+            $stmt->execute([$namaKelas, $tingkat, $tahunAjaran, $waliKelasId]);
+            header('Location: index.php?created=1');
+            exit;
+        }
+
+        $openModal  = 'create';
+    }
+
+    // Handle EDIT
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'edit') {
+        $editId      = (int) ($_POST['id'] ?? 0);
+        $namaKelas   = trim($_POST['nama_kelas'] ?? '');
+        $tingkat     = trim($_POST['tingkat'] ?? '');
+        $tahunAjaran = trim($_POST['tahun_ajaran'] ?? '');
+        $waliKelasId = ((int) ($_POST['wali_kelas_id'] ?? 0)) ?: null;
+
+        if ($namaKelas === '') $editErrors[] = 'Nama kelas wajib diisi.';
+        if ($tingkat   === '') $editErrors[] = 'Tingkat wajib dipilih.';
+
+        if ($namaKelas !== '' && $editId) {
+            $chk = $pdo->prepare('SELECT id FROM kelas WHERE nama_kelas = ? AND id != ?');
+            $chk->execute([$namaKelas, $editId]);
+            if ($chk->fetch()) $editErrors[] = 'Nama kelas sudah digunakan.';
+        }
+
+        if (empty($editErrors) && $editId) {
+            $upd = $pdo->prepare('UPDATE kelas SET nama_kelas=?, tingkat=?, tahun_ajaran=?, wali_kelas_id=? WHERE id=?');
+            $upd->execute([$namaKelas, $tingkat, $tahunAjaran, $waliKelasId, $editId]);
+            header('Location: index.php?updated=1');
+            exit;
+        }
+
+        $openModal = 'edit';
+        $editData  = [
+            'id'           => $editId,
+            'namaKelas'    => $namaKelas,
+            'tingkat'      => $tingkat,
+            'tahunAjaran'  => $tahunAjaran,
+            'waliKelasId'  => $waliKelasId,
+        ];
+    }
+
+    // Main queries
     $where  = '';
     $params = [];
     if ($search !== '') {
@@ -34,7 +101,7 @@ try {
     $offset     = ($page - 1) * $perPage;
 
     $stmt = $pdo->prepare("
-        SELECT k.id, k.nama_kelas, k.tingkat, k.tahun_ajaran,
+        SELECT k.id, k.nama_kelas, k.tingkat, k.tahun_ajaran, k.wali_kelas_id,
                g.nama_guru AS wali_kelas,
                (SELECT COUNT(*) FROM siswa s WHERE s.kelas_id = k.id AND s.status = 'aktif') AS jumlah_siswa
         FROM kelas k
@@ -49,6 +116,7 @@ try {
     $totalKelas = (int) $pdo->query('SELECT COUNT(*) FROM kelas')->fetchColumn();
     $totalGuru  = (int) $pdo->query('SELECT COUNT(*) FROM guru')->fetchColumn();
     $totalSiswa = (int) $pdo->query('SELECT COUNT(*) FROM siswa WHERE status = "aktif"')->fetchColumn();
+    $guruList   = $pdo->query('SELECT id, nama_guru FROM guru ORDER BY nama_guru')->fetchAll();
 
 } catch (PDOException $e) {
     $dbError = $e->getMessage();
@@ -79,10 +147,10 @@ require_once $basePath . 'includes/header.php';
                     <h2 class="text-2xl font-bold text-gray-800">Data Kelas</h2>
                     <p class="text-gray-400 text-sm mt-0.5">Manajemen kelas, wali kelas, dan data rombongan belajar</p>
                 </div>
-                <a href="create.php"
-                   class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-primary rounded-xl hover:bg-primary/90 transition shrink-0">
+                <button onclick="openModal('modal-create')"
+                        class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-primary rounded-xl hover:bg-primary/90 transition shrink-0">
                     <i class="bi bi-plus-circle"></i> Tambah Kelas
-                </a>
+                </button>
             </div>
 
             <?php if ($flash): ?>
@@ -232,11 +300,17 @@ require_once $basePath . 'includes/header.php';
 
                                 <td class="px-5 py-4">
                                     <div class="flex items-center gap-2">
-                                        <a href="edit.php?id=<?= $k['id'] ?>"
-                                           class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-blue-50 hover:text-primary hover:border-blue-200 transition"
-                                           title="Edit">
+                                        <button onclick="openEditModal(<?= htmlspecialchars(json_encode([
+                                                    'id'           => $k['id'],
+                                                    'nama_kelas'   => $k['nama_kelas'],
+                                                    'tingkat'      => $k['tingkat'],
+                                                    'tahun_ajaran' => $k['tahun_ajaran'] ?? '',
+                                                    'wali_kelas_id'=> (string) ($k['wali_kelas_id'] ?? ''),
+                                                ]), ENT_QUOTES) ?>"
+                                                class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-blue-50 hover:text-primary hover:border-blue-200 transition"
+                                                title="Edit">
                                             <i class="bi bi-pencil text-sm"></i>
-                                        </a>
+                                        </button>
                                         <button onclick="confirmDelete(<?= $k['id'] ?>, '<?= htmlspecialchars($k['nama_kelas'], ENT_QUOTES) ?>')"
                                                 class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition"
                                                 title="Hapus">
@@ -295,12 +369,211 @@ require_once $basePath . 'includes/header.php';
     <input type="hidden" name="id" id="delete-id">
 </form>
 
+<!-- Modal: Tambah Kelas -->
+<div id="modal-create" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('modal-create')"></div>
+    <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 p-6 animate-fade-in">
+
+        <div class="flex items-center justify-between mb-5">
+            <div>
+                <h3 class="text-lg font-bold text-gray-800">Tambah Kelas</h3>
+                <p class="text-xs text-gray-400 mt-0.5">Buat rombongan belajar baru</p>
+            </div>
+            <button onclick="closeModal('modal-create')" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition">
+                <i class="bi bi-x-lg text-sm"></i>
+            </button>
+        </div>
+
+        <?php if ($openModal === 'create' && $createErrors): ?>
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 space-y-1">
+            <?php foreach ($createErrors as $e): ?>
+            <p><i class="bi bi-exclamation-circle me-1"></i><?= htmlspecialchars($e) ?></p>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+        <form method="POST" class="space-y-4" novalidate>
+            <input type="hidden" name="_action" value="create">
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5">Nama Kelas *</label>
+                <input type="text" name="nama_kelas"
+                       value="<?= $openModal === 'create' ? htmlspecialchars($_POST['nama_kelas'] ?? '') : '' ?>"
+                       placeholder="Contoh: XII IPS 1" required
+                       class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-white transition">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5">Tingkat *</label>
+                    <select name="tingkat" required
+                            class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-white transition">
+                        <option value="">Pilih tingkat</option>
+                        <?php foreach (['X', 'XI', 'XII'] as $t): ?>
+                        <option value="<?= $t ?>" <?= ($openModal === 'create' && ($_POST['tingkat'] ?? '') === $t) ? 'selected' : '' ?>>
+                            Kelas <?= $t ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5">Tahun Ajaran</label>
+                    <input type="text" name="tahun_ajaran"
+                           value="<?= $openModal === 'create' ? htmlspecialchars($_POST['tahun_ajaran'] ?? '2025/2026') : '2025/2026' ?>"
+                           placeholder="2025/2026"
+                           class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-white transition">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5">Wali Kelas</label>
+                <select name="wali_kelas_id"
+                        class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-white transition">
+                    <option value="">— Pilih wali kelas —</option>
+                    <?php foreach ($guruList as $g): ?>
+                    <option value="<?= $g['id'] ?>" <?= ($openModal === 'create' && ($_POST['wali_kelas_id'] ?? '') == $g['id']) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($g['nama_guru']) ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2 border-t border-gray-100">
+                <button type="submit"
+                        class="px-5 py-2.5 text-sm font-semibold text-white bg-primary rounded-xl hover:bg-primary/90 transition">
+                    <i class="bi bi-check-lg me-1"></i> Simpan Kelas
+                </button>
+                <button type="button" onclick="closeModal('modal-create')"
+                        class="px-5 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                    Batal
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<!-- Modal: Edit Kelas -->
+<div id="modal-edit" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal('modal-edit')"></div>
+    <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 p-6 animate-fade-in">
+
+        <div class="flex items-center justify-between mb-5">
+            <div>
+                <h3 class="text-lg font-bold text-gray-800">Edit Kelas</h3>
+                <p class="text-xs text-gray-400 mt-0.5">Ubah data kelas</p>
+            </div>
+            <button onclick="closeModal('modal-edit')" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition">
+                <i class="bi bi-x-lg text-sm"></i>
+            </button>
+        </div>
+
+        <?php if ($openModal === 'edit' && $editErrors): ?>
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 space-y-1">
+            <?php foreach ($editErrors as $e): ?>
+            <p><i class="bi bi-exclamation-circle me-1"></i><?= htmlspecialchars($e) ?></p>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+        <form method="POST" class="space-y-4" novalidate>
+            <input type="hidden" name="_action" value="edit">
+            <input type="hidden" name="id" id="edit-id" value="<?= $editData['id'] ?? '' ?>">
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5">Nama Kelas *</label>
+                <input type="text" name="nama_kelas" id="edit-nama-kelas"
+                       value="<?= htmlspecialchars($editData['namaKelas'] ?? '') ?>"
+                       placeholder="Contoh: XII IPS 1" required
+                       class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-white transition">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5">Tingkat *</label>
+                    <select name="tingkat" id="edit-tingkat" required
+                            class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-white transition">
+                        <option value="">Pilih tingkat</option>
+                        <?php foreach (['X', 'XI', 'XII'] as $t): ?>
+                        <option value="<?= $t ?>" <?= ($editData['tingkat'] ?? '') === $t ? 'selected' : '' ?>>
+                            Kelas <?= $t ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5">Tahun Ajaran</label>
+                    <input type="text" name="tahun_ajaran" id="edit-tahun-ajaran"
+                           value="<?= htmlspecialchars($editData['tahunAjaran'] ?? '') ?>"
+                           placeholder="2025/2026"
+                           class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-white transition">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1.5">Wali Kelas</label>
+                <select name="wali_kelas_id" id="edit-wali-kelas-id"
+                        class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-white transition">
+                    <option value="">— Pilih wali kelas —</option>
+                    <?php foreach ($guruList as $g): ?>
+                    <option value="<?= $g['id'] ?>" <?= ($editData['waliKelasId'] ?? '') == $g['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($g['nama_guru']) ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2 border-t border-gray-100">
+                <button type="submit"
+                        class="px-5 py-2.5 text-sm font-semibold text-white bg-primary rounded-xl hover:bg-primary/90 transition">
+                    <i class="bi bi-check-lg me-1"></i> Simpan Perubahan
+                </button>
+                <button type="button" onclick="closeModal('modal-edit')"
+                        class="px-5 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+                    Batal
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
 <script>
+function openModal(id) {
+    document.getElementById(id).classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+function openEditModal(data) {
+    document.getElementById('edit-id').value          = data.id;
+    document.getElementById('edit-nama-kelas').value  = data.nama_kelas;
+    document.getElementById('edit-tingkat').value     = data.tingkat;
+    document.getElementById('edit-tahun-ajaran').value = data.tahun_ajaran;
+    document.getElementById('edit-wali-kelas-id').value = data.wali_kelas_id || '';
+    openModal('modal-edit');
+}
+
 function confirmDelete(id, nama) {
     if (!confirm(`Hapus kelas "${nama}"?\nSemua siswa di kelas ini akan kehilangan data kelasnya.`)) return;
     document.getElementById('delete-id').value = id;
     document.getElementById('delete-form').submit();
 }
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeModal('modal-create');
+        closeModal('modal-edit');
+    }
+});
+
+<?php if ($openModal): ?>
+openModal('modal-<?= $openModal ?>');
+<?php endif; ?>
 </script>
 
 <?php require_once $basePath . 'includes/footer.php'; ?>

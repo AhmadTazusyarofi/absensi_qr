@@ -35,5 +35,18 @@ $_SESSION['role']    = $user['role'];
 $_SESSION['nama']    = $user['nama'];
 $_SESSION['foto']    = $user['foto_profil'];
 
-header('Location: /absensi/dashboard.php');
+// Store siswa_id in session for profile page
+if ($user['role'] === 'siswa') {
+    $sStmt = $pdo->prepare('SELECT id FROM siswa WHERE user_id = ?');
+    $sStmt->execute([$user['id']]);
+    $siswaRow = $sStmt->fetch();
+    if ($siswaRow) $_SESSION['siswa_id'] = (int) $siswaRow['id'];
+}
+
+$redirect = match($user['role']) {
+    'orang_tua' => '/absensi/modules/parents/dashboard.php',
+    'siswa'     => '/absensi/modules/students/profile.php',
+    default     => '/absensi/dashboard.php',
+};
+header('Location: ' . $redirect);
 exit;

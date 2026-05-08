@@ -17,7 +17,7 @@ $initial = mb_strtoupper(mb_substr($nama, 0, 1));
     <!-- Hamburger toggle -->
     <button onclick="toggleSidebar()"
         class="text-gray-500 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-100 transition shrink-0">
-        <i class="bi bi-list text-xl"></i>
+        <i class="bi bi-text-left text-xl"></i>
     </button>
 
     <!-- Search bar -->

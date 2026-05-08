@@ -4,8 +4,9 @@ $currentPath = $_SERVER['PHP_SELF'];
 
 function sidebarLink(string $href, string $icon, string $label, string $current): string
 {
-    $isActive = basename($current) === basename($href) ||
-                (basename($href) !== 'dashboard.php' && str_contains($current, dirname($href)));
+    $isActive = $current === $href ||
+                (basename($href) === 'index.php' &&
+                 str_starts_with($current, dirname($href) . '/'));
     $active = $isActive
         ? 'bg-primary text-white shadow-sm'
         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900';
@@ -31,11 +32,14 @@ function sidebarLink(string $href, string $icon, string $label, string $current)
     <!-- Navigation -->
     <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
 
+        <?php if (in_array($role, ['admin', 'guru', 'siswa'])): ?>
         <?= sidebarLink('/absensi/dashboard.php', 'bi-grid-fill', 'Dashboard', $currentPath) ?>
+        <?php endif; ?>
 
         <?php if ($role === 'admin'): ?>
         <?= sidebarLink('/absensi/modules/students/index.php', 'bi-people', 'Data Siswa', $currentPath) ?>
-        <?= sidebarLink('/absensi/modules/attendance/scan.php', 'bi-qr-code-scan', 'Pemindai QR', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/teachers/index.php', 'bi-person-workspace', 'Data Guru', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/classes/index.php', 'bi-building', 'Manajemen Kelas', $currentPath) ?>
         <?= sidebarLink('/absensi/modules/attendance/history.php', 'bi-journal-text', 'Log Kehadiran', $currentPath) ?>
         <?= sidebarLink('/absensi/modules/reports/index.php', 'bi-bar-chart-line', 'Laporan', $currentPath) ?>
         <?= sidebarLink('/absensi/modules/parents/index.php', 'bi-people-fill', 'Pantauan Orang Tua', $currentPath) ?>
@@ -43,17 +47,17 @@ function sidebarLink(string $href, string $icon, string $label, string $current)
 
         <?php if ($role === 'guru'): ?>
         <?= sidebarLink('/absensi/modules/attendance/scan.php', 'bi-qr-code-scan', 'Pemindai QR', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/attendance/manual.php', 'bi-pencil-square', 'Absen Manual', $currentPath) ?>
         <?= sidebarLink('/absensi/modules/attendance/history.php', 'bi-journal-text', 'Log Kehadiran', $currentPath) ?>
         <?= sidebarLink('/absensi/modules/reports/index.php', 'bi-bar-chart-line', 'Laporan', $currentPath) ?>
         <?php endif; ?>
 
         <?php if ($role === 'siswa'): ?>
-        <?= sidebarLink('/absensi/modules/attendance/my-attendance.php', 'bi-journal-text', 'Log Kehadiran', $currentPath) ?>
-        <?= sidebarLink('/absensi/modules/profile/index.php', 'bi-person-circle', 'Profil Saya', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/students/profile.php', 'bi-person-vcard', 'Data Pribadi', $currentPath) ?>
         <?php endif; ?>
 
         <?php if ($role === 'orang_tua'): ?>
-        <?= sidebarLink('/absensi/modules/parents/report.php', 'bi-people-fill', 'Pantauan Anak', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/parents/dashboard.php', 'bi-house-heart-fill', 'Pantauan Anak', $currentPath) ?>
         <?php endif; ?>
 
     </nav>

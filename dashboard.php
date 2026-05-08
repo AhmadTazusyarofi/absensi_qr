@@ -76,32 +76,39 @@ $statusBadge = [
             <!-- Stat Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
+                <div
+                    class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500 mb-1">Total Siswa Terdaftar</p>
                         <p class="text-4xl font-bold text-gray-800"><?= number_format($totalSiswa, 0, ',', '.') ?></p>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-2xl shrink-0">
+                    <div
+                        class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-2xl shrink-0">
                         <i class="bi bi-people-fill"></i>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
+                <div
+                    class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500 mb-1">Hadir Hari Ini</p>
-                        <p class="text-4xl font-bold text-green-500"><?= number_format($hadirHariIni, 0, ',', '.') ?></p>
+                        <p class="text-4xl font-bold text-green-500"><?= number_format($hadirHariIni, 0, ',', '.') ?>
+                        </p>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-500 text-2xl shrink-0">
+                    <div
+                        class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-500 text-2xl shrink-0">
                         <i class="bi bi-check-circle-fill"></i>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
+                <div
+                    class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
                     <div>
                         <p class="text-sm text-gray-500 mb-1">Absen Hari Ini</p>
                         <p class="text-4xl font-bold text-red-500"><?= number_format($absenHariIni, 0, ',', '.') ?></p>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 text-2xl shrink-0">
+                    <div
+                        class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 text-2xl shrink-0">
                         <i class="bi bi-x-circle-fill"></i>
                     </div>
                 </div>
@@ -116,7 +123,7 @@ $statusBadge = [
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="font-semibold text-gray-800">Log Kehadiran baru</h3>
                         <a href="/absensi/modules/attendance/history.php"
-                           class="text-sm text-primary font-medium hover:underline flex items-center gap-1">
+                            class="text-sm text-primary font-medium hover:underline flex items-center gap-1">
                             Lihat Semua <i class="bi bi-arrow-right"></i>
                         </a>
                     </div>
@@ -142,18 +149,21 @@ $statusBadge = [
                             <?php foreach ($recentLogs as $log): ?>
                             <tr>
                                 <td class="py-3 flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0 text-xs font-bold">
+                                    <div
+                                        class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0 text-xs font-bold">
                                         <?= mb_strtoupper(mb_substr($log['nama_siswa'], 0, 1)) ?>
                                     </div>
-                                    <span class="font-medium text-gray-700 truncate max-w-[120px]">
+                                    <span class="font-medium text-gray-700 truncate max-w-30">
                                         <?= htmlspecialchars($log['nama_siswa']) ?>
                                     </span>
                                 </td>
                                 <td class="py-3 text-gray-500"><?= htmlspecialchars($log['nama_kelas'] ?? '-') ?></td>
-                                <td class="py-3 text-gray-500"><?= $log['waktu_scan'] ? substr($log['waktu_scan'], 0, 5) . ' WIB' : '—' ?></td>
+                                <td class="py-3 text-gray-500">
+                                    <?= $log['waktu_scan'] ? substr($log['waktu_scan'], 0, 5) . ' WIB' : '—' ?></td>
                                 <td class="py-3">
                                     <?php $s = $log['status_kehadiran']; ?>
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold <?= $statusBadge[$s] ?? 'bg-gray-100 text-gray-600' ?>">
+                                    <span
+                                        class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold <?= $statusBadge[$s] ?? 'bg-gray-100 text-gray-600' ?>">
                                         <span class="w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
                                         <?= strtoupper($s) ?>
                                     </span>
@@ -202,15 +212,11 @@ $statusBadge = [
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('sidebar-collapsed');
-}
-
 <?php if (in_array($role, ['admin', 'guru'])): ?>
-const days  = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum'];
+const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum'];
 const thisW = [88, 92, 85, 94, 90];
 const lastW = [82, 87, 80, 88, 85];
-const avg   = (thisW.reduce((a,b) => a+b, 0) / thisW.length).toFixed(1);
+const avg = (thisW.reduce((a, b) => a + b, 0) / thisW.length).toFixed(1);
 
 document.getElementById('avg-rate').textContent = avg + '%';
 
@@ -218,8 +224,7 @@ new Chart(document.getElementById('weeklyChart'), {
     type: 'bar',
     data: {
         labels: days,
-        datasets: [
-            {
+        datasets: [{
                 label: 'Minggu Ini',
                 data: thisW,
                 backgroundColor: '#0070ba',
@@ -237,15 +242,35 @@ new Chart(document.getElementById('weeklyChart'), {
     },
     options: {
         responsive: true,
-        plugins: { legend: { display: false } },
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
         scales: {
             y: {
                 min: 60,
                 max: 100,
-                ticks: { callback: v => v + '%', font: { size: 10 } },
-                grid: { color: '#f3f4f6' }
+                ticks: {
+                    callback: v => v + '%',
+                    font: {
+                        size: 10
+                    }
+                },
+                grid: {
+                    color: '#f3f4f6'
+                }
             },
-            x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    font: {
+                        size: 11
+                    }
+                }
+            }
         }
     }
 });
