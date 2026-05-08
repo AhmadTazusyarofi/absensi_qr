@@ -203,10 +203,7 @@ $statusBadge = [
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    sidebar.classList.toggle('w-64');
-    sidebar.classList.toggle('w-0');
-    sidebar.classList.toggle('overflow-hidden');
+    document.getElementById('sidebar').classList.toggle('sidebar-collapsed');
 }
 
 <?php if (in_array($role, ['admin', 'guru'])): ?>

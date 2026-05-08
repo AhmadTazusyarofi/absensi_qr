@@ -10,18 +10,19 @@ function sidebarLink(string $href, string $icon, string $label, string $current)
         ? 'bg-primary text-white shadow-sm'
         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900';
 
-    return "<a href=\"{$href}\" class=\"flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition {$active}\">
-                <i class=\"bi {$icon} text-base\"></i> {$label}
+    return "<a href=\"{$href}\" title=\"{$label}\" class=\"sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition {$active}\">
+                <i class=\"bi {$icon} text-base shrink-0\"></i>
+                <span class=\"sidebar-label truncate\">{$label}</span>
             </a>";
 }
 ?>
 
-<aside id="sidebar" class="w-64 min-h-screen flex flex-col shrink-0 bg-white border-r border-gray-200 transition-all duration-300">
+<aside id="sidebar" class="w-64 min-h-screen flex flex-col shrink-0 bg-white border-r border-gray-200 transition-all duration-300 overflow-hidden">
 
     <!-- Brand -->
-    <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+    <div class="sidebar-brand flex items-center gap-3 px-5 py-4 border-b border-gray-100">
         <img src="/absensi/assets/images/logo.png" alt="Logo" class="w-10 h-10 object-contain shrink-0">
-        <div class="leading-tight overflow-hidden">
+        <div class="sidebar-label leading-tight overflow-hidden">
             <p class="text-primary font-bold text-sm truncate">SMA 10 Tangerang</p>
             <p class="text-gray-400 text-xs">Sistem Absensi</p>
         </div>
@@ -59,9 +60,10 @@ function sidebarLink(string $href, string $icon, string $label, string $current)
 
     <!-- Logout -->
     <div class="px-3 py-4 border-t border-gray-100">
-        <a href="/absensi/modules/auth/logout.php"
-           class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition">
-            <i class="bi bi-box-arrow-left text-base"></i> Logout
+        <a href="/absensi/modules/auth/logout.php" title="Logout"
+           class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition">
+            <i class="bi bi-box-arrow-left text-base shrink-0"></i>
+            <span class="sidebar-label">Logout</span>
         </a>
     </div>
 

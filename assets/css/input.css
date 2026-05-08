@@ -1,2 +1,32 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/forms";
+
+@theme {
+  /* Warna utama sistem */
+  --color-primary: #0070ba;
+  --background: #F1F5F9;
+  --color-success: #16a34a;
+  --color-danger: #dc2626;
+  --color-warning: #d97706;
+
+  /* Font */
+  --font-sans: "Outfit", sans-serif;
+}
+
+/* Sidebar collapse — icon-only mode */
+#sidebar.sidebar-collapsed {
+    width: 4rem;
+}
+#sidebar.sidebar-collapsed .sidebar-label {
+    display: none;
+}
+#sidebar.sidebar-collapsed .sidebar-link {
+    justify-content: center;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+#sidebar.sidebar-collapsed .sidebar-brand {
+    justify-content: center;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
