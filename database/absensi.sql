@@ -81,8 +81,8 @@ CREATE TABLE IF NOT EXISTS absensi (
   metode_absensi   ENUM('barcode','manual') NOT NULL,
   keterangan       TEXT,
   UNIQUE KEY unique_absensi (siswa_id, tanggal_absensi),
-  FOREIGN KEY (siswa_id) REFERENCES siswa(id),
-  FOREIGN KEY (guru_id) REFERENCES guru(id)
+  FOREIGN KEY (siswa_id) REFERENCES siswa(id) ON DELETE RESTRICT,
+  FOREIGN KEY (guru_id) REFERENCES guru(id) ON DELETE RESTRICT
 );
 
 -- 7. jadwal_absensi
@@ -104,6 +104,7 @@ CREATE TABLE IF NOT EXISTS log_scan (
   barcode    VARCHAR(255) NOT NULL,
   hasil_scan ENUM('berhasil','gagal') NOT NULL,
   pesan      VARCHAR(255),
+  waktu_scan DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (siswa_id) REFERENCES siswa(id) ON DELETE SET NULL
 );
 
