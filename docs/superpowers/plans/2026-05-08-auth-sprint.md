@@ -494,6 +494,8 @@ git commit -m "feat: update login page with bootstrap icons"
 
 ## Task 5: Sidebar & Navbar
 
+**Design reference:** Sidebar putih dengan menu aktif biru, navbar dengan hamburger + search + user info di kanan.
+
 **Files:**
 - Create: `includes/sidebar.php`
 - Create: `includes/navbar.php`
@@ -507,72 +509,64 @@ $currentPath = $_SERVER['PHP_SELF'];
 
 function sidebarLink(string $href, string $icon, string $label, string $current): string
 {
-    $active = str_contains($current, $href)
-        ? 'bg-white/20 text-white'
-        : 'text-white/70 hover:bg-white/10 hover:text-white';
+    $isActive = basename($current) === basename($href) ||
+                (basename($href) !== 'dashboard.php' && str_contains($current, dirname($href)));
+    $active = $isActive
+        ? 'bg-primary text-white shadow-sm'
+        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900';
 
-    return "<a href=\"{$href}\" class=\"flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition {$active}\">
+    return "<a href=\"{$href}\" class=\"flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition {$active}\">
                 <i class=\"bi {$icon} text-base\"></i> {$label}
             </a>";
 }
 ?>
 
-<aside class="w-64 min-h-screen flex flex-col shrink-0"
-       style="background: linear-gradient(180deg, #0070ba 0%, #004f85 100%);">
+<aside id="sidebar" class="w-64 min-h-screen flex flex-col shrink-0 bg-white border-r border-gray-200 transition-all duration-300">
 
     <!-- Brand -->
-    <div class="flex items-center gap-3 px-5 py-5 border-b border-white/20">
-        <img src="/absensi/assets/images/logo.png" alt="Logo" class="w-9 h-9 object-contain">
-        <div class="leading-tight">
-            <p class="text-white font-bold text-sm">Sistem Absensi</p>
-            <p class="text-white/60 text-xs">SMAN 10 Tangerang</p>
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+        <img src="/absensi/assets/images/logo.png" alt="Logo" class="w-10 h-10 object-contain shrink-0">
+        <div class="leading-tight overflow-hidden">
+            <p class="text-primary font-bold text-sm truncate">SMA 10 Tangerang</p>
+            <p class="text-gray-400 text-xs">Sistem Absensi</p>
         </div>
     </div>
 
     <!-- Navigation -->
     <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
 
-        <!-- Semua role -->
-        <?= sidebarLink('/absensi/dashboard.php', 'bi-speedometer2', 'Dashboard', $currentPath) ?>
+        <?= sidebarLink('/absensi/dashboard.php', 'bi-grid-fill', 'Dashboard', $currentPath) ?>
 
         <?php if ($role === 'admin'): ?>
-        <p class="px-4 pt-4 pb-1 text-white/40 text-xs uppercase tracking-widest">Manajemen</p>
-        <?= sidebarLink('/absensi/modules/users/index.php', 'bi-people', 'Manajemen User', $currentPath) ?>
-        <?= sidebarLink('/absensi/modules/students/index.php', 'bi-person-badge', 'Manajemen Siswa', $currentPath) ?>
-        <?= sidebarLink('/absensi/modules/classes/index.php', 'bi-building', 'Manajemen Kelas', $currentPath) ?>
-        <p class="px-4 pt-4 pb-1 text-white/40 text-xs uppercase tracking-widest">Laporan</p>
-        <?= sidebarLink('/absensi/modules/attendance/history.php', 'bi-calendar-check', 'Rekap Kehadiran', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/students/index.php', 'bi-people', 'Data Siswa', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/attendance/scan.php', 'bi-qr-code-scan', 'Pemindai QR', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/attendance/history.php', 'bi-journal-text', 'Log Kehadiran', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/reports/index.php', 'bi-bar-chart-line', 'Laporan', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/parents/index.php', 'bi-people-fill', 'Pantauan Orang Tua', $currentPath) ?>
         <?php endif; ?>
 
         <?php if ($role === 'guru'): ?>
-        <p class="px-4 pt-4 pb-1 text-white/40 text-xs uppercase tracking-widest">Absensi</p>
-        <?= sidebarLink('/absensi/modules/attendance/scan.php', 'bi-qr-code-scan', 'Scan Absensi', $currentPath) ?>
-        <?= sidebarLink('/absensi/modules/attendance/manual.php', 'bi-pencil-square', 'Input Manual', $currentPath) ?>
-        <p class="px-4 pt-4 pb-1 text-white/40 text-xs uppercase tracking-widest">Laporan</p>
-        <?= sidebarLink('/absensi/modules/attendance/history.php', 'bi-calendar-check', 'Rekap Kehadiran', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/attendance/scan.php', 'bi-qr-code-scan', 'Pemindai QR', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/attendance/history.php', 'bi-journal-text', 'Log Kehadiran', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/reports/index.php', 'bi-bar-chart-line', 'Laporan', $currentPath) ?>
         <?php endif; ?>
 
         <?php if ($role === 'siswa'): ?>
-        <p class="px-4 pt-4 pb-1 text-white/40 text-xs uppercase tracking-widest">Kehadiran</p>
-        <?= sidebarLink('/absensi/modules/attendance/my-attendance.php', 'bi-calendar-check', 'Rekap Kehadiran', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/attendance/my-attendance.php', 'bi-journal-text', 'Log Kehadiran', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/profile/index.php', 'bi-person-circle', 'Profil Saya', $currentPath) ?>
         <?php endif; ?>
 
         <?php if ($role === 'orang_tua'): ?>
-        <p class="px-4 pt-4 pb-1 text-white/40 text-xs uppercase tracking-widest">Monitoring</p>
-        <?= sidebarLink('/absensi/modules/parents/report.php', 'bi-graph-up', 'Laporan Anak', $currentPath) ?>
+        <?= sidebarLink('/absensi/modules/parents/report.php', 'bi-people-fill', 'Pantauan Anak', $currentPath) ?>
         <?php endif; ?>
-
-        <!-- Semua role -->
-        <p class="px-4 pt-4 pb-1 text-white/40 text-xs uppercase tracking-widest">Akun</p>
-        <?= sidebarLink('/absensi/modules/profile/index.php', 'bi-person-circle', 'Profil Saya', $currentPath) ?>
 
     </nav>
 
     <!-- Logout -->
-    <div class="px-3 py-4 border-t border-white/20">
+    <div class="px-3 py-4 border-t border-gray-100">
         <a href="/absensi/modules/auth/logout.php"
-           class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-red-500/20 hover:text-red-300 transition">
-            <i class="bi bi-box-arrow-left text-base"></i> Keluar
+           class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition">
+            <i class="bi bi-box-arrow-left text-base"></i> Logout
         </a>
     </div>
 
@@ -584,41 +578,50 @@ function sidebarLink(string $href, string $icon, string $label, string $current)
 ```php
 <?php
 $roleLabels = [
-    'admin'      => ['label' => 'Administrator', 'color' => 'bg-purple-100 text-purple-700'],
-    'guru'       => ['label' => 'Guru',          'color' => 'bg-blue-100 text-blue-700'],
-    'siswa'      => ['label' => 'Siswa',         'color' => 'bg-green-100 text-green-700'],
-    'orang_tua'  => ['label' => 'Orang Tua',     'color' => 'bg-orange-100 text-orange-700'],
+    'admin'     => 'Kepala Admin',
+    'guru'      => 'Guru',
+    'siswa'     => 'Siswa',
+    'orang_tua' => 'Orang Tua',
 ];
 
-$role      = $_SESSION['role'] ?? 'guest';
-$nama      = $_SESSION['nama'] ?? '';
-$foto      = $_SESSION['foto'] ?? null;
-$roleInfo  = $roleLabels[$role] ?? ['label' => $role, 'color' => 'bg-gray-100 text-gray-700'];
-$initial   = mb_strtoupper(mb_substr($nama, 0, 1));
+$role    = $_SESSION['role'] ?? 'guest';
+$nama    = $_SESSION['nama'] ?? '';
+$foto    = $_SESSION['foto'] ?? null;
+$initial = mb_strtoupper(mb_substr($nama, 0, 1));
 ?>
 
-<header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+<header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-4 sticky top-0 z-10">
 
-    <div>
-        <h1 class="text-sm font-semibold text-gray-800"><?= htmlspecialchars($pageTitle ?? 'Dashboard') ?></h1>
-        <p class="text-xs text-gray-400"><?= date('l, d F Y') ?></p>
+    <!-- Hamburger toggle -->
+    <button onclick="toggleSidebar()"
+            class="text-gray-500 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-100 transition shrink-0">
+        <i class="bi bi-list text-xl"></i>
+    </button>
+
+    <!-- Search bar -->
+    <div class="flex-1 max-w-md">
+        <div class="relative">
+            <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+            <input type="text"
+                   placeholder="Cari siswa atau kelas..."
+                   class="w-full pl-9 pr-4 py-2 text-sm bg-gray-100 border-0 rounded-full placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:bg-white transition">
+        </div>
     </div>
 
-    <div class="flex items-center gap-3">
-        <span class="text-xs font-semibold px-2.5 py-1 rounded-full <?= $roleInfo['color'] ?>">
-            <?= $roleInfo['label'] ?>
-        </span>
-        <div class="flex items-center gap-2">
-            <?php if ($foto): ?>
-                <img src="/absensi/uploads/<?= htmlspecialchars($foto) ?>"
-                     alt="Foto" class="w-8 h-8 rounded-full object-cover border border-gray-200">
-            <?php else: ?>
-                <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold">
-                    <?= htmlspecialchars($initial) ?>
-                </div>
-            <?php endif; ?>
-            <span class="text-sm font-medium text-gray-700"><?= htmlspecialchars($nama) ?></span>
+    <!-- User info -->
+    <div class="ml-auto flex items-center gap-3 shrink-0">
+        <div class="text-right hidden sm:block">
+            <p class="text-sm font-semibold text-gray-800 leading-tight"><?= htmlspecialchars($nama) ?></p>
+            <p class="text-xs text-gray-400 uppercase tracking-wide"><?= $roleLabels[$role] ?? $role ?></p>
         </div>
+        <?php if ($foto): ?>
+            <img src="/absensi/uploads/<?= htmlspecialchars($foto) ?>"
+                 alt="Foto" class="w-10 h-10 rounded-full object-cover border-2 border-gray-200">
+        <?php else: ?>
+            <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm shrink-0">
+                <?= htmlspecialchars($initial) ?>
+            </div>
+        <?php endif; ?>
     </div>
 
 </header>
@@ -628,12 +631,14 @@ $initial   = mb_strtoupper(mb_substr($nama, 0, 1));
 
 ```bash
 git add includes/sidebar.php includes/navbar.php
-git commit -m "feat: add sidebar and navbar with role-based menu"
+git commit -m "feat: add white sidebar and topbar navbar"
 ```
 
 ---
 
 ## Task 6: Dashboard
+
+**Design reference:** Heading "Hallo, [Nama]!", 3 stat cards (Total Siswa, Hadir, Absen), tabel Log Kehadiran terbaru, Ringkasan Mingguan dengan bar chart (Chart.js).
 
 **Files:**
 - Create: `dashboard.php`
@@ -648,27 +653,51 @@ require_auth(['admin', 'guru', 'siswa', 'orang_tua']);
 $pageTitle = 'Dashboard';
 require_once 'includes/header.php';
 
-$roleWelcome = [
-    'admin'     => 'Kelola seluruh sistem absensi sekolah.',
-    'guru'      => 'Mulai scan absensi atau input manual hari ini.',
-    'siswa'     => 'Lihat rekap kehadiran dan profil kamu.',
-    'orang_tua' => 'Pantau kehadiran putra/putri Anda.',
-];
+$role = $_SESSION['role'];
+$nama = $_SESSION['nama'];
 
-$roleIcons = [
-    'admin'     => 'bi-shield-check',
-    'guru'      => 'bi-camera',
-    'siswa'     => 'bi-person-badge',
-    'orang_tua' => 'bi-heart',
-];
+// Stats (query real data, default 0 if tables empty)
+$pdo = null;
+$totalSiswa  = 0;
+$hadirHariIni = 0;
+$absenHariIni = 0;
+$recentLogs   = [];
 
-$role    = $_SESSION['role'];
-$nama    = $_SESSION['nama'];
-$welcome = $roleWelcome[$role] ?? '';
-$icon    = $roleIcons[$role] ?? 'bi-person';
+try {
+    require_once 'config/database.php';
+    $pdo = getDB();
+    $today = date('Y-m-d');
+
+    if (in_array($role, ['admin', 'guru'])) {
+        $totalSiswa   = (int) $pdo->query('SELECT COUNT(*) FROM siswa WHERE status = "aktif"')->fetchColumn();
+        $hadirHariIni = (int) $pdo->query("SELECT COUNT(*) FROM absensi WHERE tanggal_absensi = '{$today}' AND status_kehadiran = 'hadir'")->fetchColumn();
+        $absenHariIni = (int) $pdo->query("SELECT COUNT(*) FROM absensi WHERE tanggal_absensi = '{$today}' AND status_kehadiran IN ('izin','sakit','alfa')")->fetchColumn();
+
+        $stmt = $pdo->prepare("
+            SELECT s.nama_siswa, k.nama_kelas, a.waktu_scan, a.status_kehadiran, s.foto
+            FROM absensi a
+            JOIN siswa s ON a.siswa_id = s.id
+            LEFT JOIN kelas k ON s.kelas_id = k.id
+            ORDER BY a.id DESC
+            LIMIT 5
+        ");
+        $stmt->execute();
+        $recentLogs = $stmt->fetchAll();
+    }
+} catch (PDOException $e) {
+    // Tables not yet seeded — show zeros
+}
+
+$statusBadge = [
+    'hadir'     => 'bg-blue-100 text-blue-700',
+    'terlambat' => 'bg-orange-100 text-orange-700',
+    'izin'      => 'bg-yellow-100 text-yellow-700',
+    'sakit'     => 'bg-purple-100 text-purple-700',
+    'alfa'      => 'bg-red-100 text-red-700',
+];
 ?>
 
-<div class="flex min-h-screen">
+<div class="flex min-h-screen bg-gray-50">
 
     <?php require_once 'includes/sidebar.php'; ?>
 
@@ -676,70 +705,201 @@ $icon    = $roleIcons[$role] ?? 'bi-person';
 
         <?php require_once 'includes/navbar.php'; ?>
 
-        <main class="flex-1 p-6">
+        <main class="flex-1 p-6 space-y-6">
 
-            <!-- Welcome Card -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-2xl shrink-0">
-                        <i class="bi <?= $icon ?>"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-lg font-bold text-gray-800">
-                            Selamat Datang, <?= htmlspecialchars($nama) ?>!
-                        </h2>
-                        <p class="text-gray-400 text-sm"><?= $welcome ?></p>
-                    </div>
-                </div>
+            <!-- Heading -->
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Hallo, <?= htmlspecialchars($nama) ?>!</h2>
+                <p class="text-gray-400 text-sm mt-0.5">
+                    Berikut adalah Ringkasan kehadiran hari ini,
+                    <?= strftime('%A, %d %B %Y') ?? date('l, d F Y') ?>
+                </p>
             </div>
 
-            <!-- Placeholder stats -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
-                        <i class="bi bi-calendar-check text-lg"></i>
-                    </div>
+            <?php if (in_array($role, ['admin', 'guru'])): ?>
+
+            <!-- Stat Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
                     <div>
-                        <p class="text-xs text-gray-400">Hari ini</p>
-                        <p class="text-lg font-bold text-gray-800"><?= date('d M Y') ?></p>
+                        <p class="text-sm text-gray-500 mb-1">Total Siswa Terdaftar</p>
+                        <p class="text-4xl font-bold text-gray-800"><?= number_format($totalSiswa, 0, ',', '.') ?></p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-2xl shrink-0">
+                        <i class="bi bi-people-fill"></i>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center text-green-500">
-                        <i class="bi bi-clock text-lg"></i>
-                    </div>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
                     <div>
-                        <p class="text-xs text-gray-400">Waktu</p>
-                        <p class="text-lg font-bold text-gray-800" id="live-clock">--:--:--</p>
+                        <p class="text-sm text-gray-500 mb-1">Hadir Hari Ini</p>
+                        <p class="text-4xl font-bold text-green-500"><?= number_format($hadirHariIni, 0, ',', '.') ?></p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-500 text-2xl shrink-0">
+                        <i class="bi bi-check-circle-fill"></i>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-500">
-                        <i class="bi bi-person-circle text-lg"></i>
-                    </div>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center justify-between">
                     <div>
-                        <p class="text-xs text-gray-400">Role</p>
-                        <p class="text-lg font-bold text-gray-800 capitalize"><?= htmlspecialchars(str_replace('_', ' ', $role)) ?></p>
+                        <p class="text-sm text-gray-500 mb-1">Absen Hari Ini</p>
+                        <p class="text-4xl font-bold text-red-500"><?= number_format($absenHariIni, 0, ',', '.') ?></p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 text-2xl shrink-0">
+                        <i class="bi bi-x-circle-fill"></i>
                     </div>
                 </div>
+
             </div>
+
+            <!-- Log + Weekly Summary -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+                <!-- Log Kehadiran Terbaru -->
+                <div class="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-gray-800">Log Kehadiran baru</h3>
+                        <a href="/absensi/modules/attendance/history.php"
+                           class="text-sm text-primary font-medium hover:underline flex items-center gap-1">
+                            Lihat Semua <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
+                                <th class="pb-3 text-left font-medium">Nama Siswa</th>
+                                <th class="pb-3 text-left font-medium">Kelas</th>
+                                <th class="pb-3 text-left font-medium">Waktu</th>
+                                <th class="pb-3 text-left font-medium">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            <?php if (empty($recentLogs)): ?>
+                            <tr>
+                                <td colspan="4" class="py-8 text-center text-gray-300 text-sm">
+                                    <i class="bi bi-inbox text-3xl block mb-2"></i>
+                                    Belum ada data kehadiran hari ini
+                                </td>
+                            </tr>
+                            <?php else: ?>
+                            <?php foreach ($recentLogs as $log): ?>
+                            <tr>
+                                <td class="py-3 flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0 text-xs font-bold">
+                                        <?= mb_strtoupper(mb_substr($log['nama_siswa'], 0, 1)) ?>
+                                    </div>
+                                    <span class="font-medium text-gray-700 truncate max-w-[120px]">
+                                        <?= htmlspecialchars($log['nama_siswa']) ?>
+                                    </span>
+                                </td>
+                                <td class="py-3 text-gray-500"><?= htmlspecialchars($log['nama_kelas'] ?? '-') ?></td>
+                                <td class="py-3 text-gray-500"><?= $log['waktu_scan'] ? substr($log['waktu_scan'], 0, 5) . ' WIB' : '—' ?></td>
+                                <td class="py-3">
+                                    <?php $s = $log['status_kehadiran']; ?>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold <?= $statusBadge[$s] ?? 'bg-gray-100 text-gray-600' ?>">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
+                                        <?= strtoupper($s) ?>
+                                    </span>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Ringkasan Mingguan -->
+                <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                    <h3 class="font-semibold text-gray-800 mb-1">Ringkasan Mingguan</h3>
+                    <p class="text-xs text-gray-400 mb-4">Rerata kehadiran 7 hari terakhir</p>
+                    <div class="mb-1">
+                        <p class="text-xs text-gray-400 uppercase tracking-wide">Rerata Kehadiran</p>
+                        <p class="text-2xl font-bold text-gray-800" id="avg-rate">—%</p>
+                    </div>
+                    <canvas id="weeklyChart" height="160"></canvas>
+                    <div class="flex items-center gap-4 mt-3 text-xs text-gray-400">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-sm bg-primary inline-block"></span> Minggu Ini
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-sm bg-blue-100 inline-block"></span> Minggu Lalu
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+
+            <?php else: ?>
+
+            <!-- View untuk Siswa & Orang Tua -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+                <i class="bi bi-calendar-check text-5xl text-primary/30 block mb-3"></i>
+                <p class="text-gray-500">Pilih menu di sidebar untuk melihat data kehadiran.</p>
+            </div>
+
+            <?php endif; ?>
 
         </main>
-
     </div>
-
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-function updateClock() {
-    const now = new Date();
-    document.getElementById('live-clock').textContent =
-        now.toLocaleTimeString('id-ID');
+// Sidebar toggle
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('w-64');
+    sidebar.classList.toggle('w-0');
+    sidebar.classList.toggle('overflow-hidden');
 }
-updateClock();
-setInterval(updateClock, 1000);
+
+<?php if (in_array($role, ['admin', 'guru'])): ?>
+// Weekly chart (dummy data — replaced by real data in reports sprint)
+const days  = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum'];
+const thisW = [88, 92, 85, 94, 90];
+const lastW = [82, 87, 80, 88, 85];
+const avg   = (thisW.reduce((a,b) => a+b, 0) / thisW.length).toFixed(1);
+
+document.getElementById('avg-rate').textContent = avg + '%';
+
+new Chart(document.getElementById('weeklyChart'), {
+    type: 'bar',
+    data: {
+        labels: days,
+        datasets: [
+            {
+                label: 'Minggu Ini',
+                data: thisW,
+                backgroundColor: '#0070ba',
+                borderRadius: 6,
+                borderSkipped: false,
+            },
+            {
+                label: 'Minggu Lalu',
+                data: lastW,
+                backgroundColor: '#bfdbfe',
+                borderRadius: 6,
+                borderSkipped: false,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: {
+                min: 60,
+                max: 100,
+                ticks: { callback: v => v + '%', font: { size: 10 } },
+                grid: { color: '#f3f4f6' }
+            },
+            x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+        }
+    }
+});
+<?php endif; ?>
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
@@ -757,7 +917,7 @@ Expected: Done, no errors.
 
 ```bash
 git add dashboard.php assets/css/style.css
-git commit -m "feat: add single role-based dashboard"
+git commit -m "feat: add role-based dashboard with stats, log table, weekly chart"
 ```
 
 ---
