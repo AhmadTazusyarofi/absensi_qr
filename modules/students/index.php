@@ -5,50 +5,63 @@ require_auth(['admin']);
 $basePath = '../../';
 require_once $basePath . 'config/database.php';
 
-$pdo = getDB();
-
 // Search & pagination
 $search  = trim($_GET['q'] ?? '');
 $perPage = 10;
 $page    = max(1, (int) ($_GET['page'] ?? 1));
 
-$where  = '';
-$params = [];
-if ($search !== '') {
-    $where  = 'WHERE s.nama_siswa LIKE ? OR s.nis LIKE ?';
-    $params = ["%$search%", "%$search%"];
+$students        = [];
+$totalRows       = 0;
+$totalPages      = 1;
+$totalSiswa      = 0;
+$aktifHariIni    = 0;
+$persenKehadiran = 0;
+$dbError         = null;
+
+try {
+    $pdo = getDB();
+
+    $where  = '';
+    $params = [];
+    if ($search !== '') {
+        $where  = 'WHERE s.nama_siswa LIKE ? OR s.nis LIKE ?';
+        $params = ["%$search%", "%$search%"];
+    }
+
+    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM siswa s $where");
+    $countStmt->execute($params);
+    $totalRows  = (int) $countStmt->fetchColumn();
+    $totalPages = max(1, (int) ceil($totalRows / $perPage));
+    $page       = min($page, $totalPages);
+    $offset     = ($page - 1) * $perPage;
+
+    $stmt = $pdo->prepare("
+        SELECT s.id, s.nis, s.nama_siswa, s.jenis_kelamin, s.foto, s.status, s.barcode,
+               k.nama_kelas,
+               u.email
+        FROM   siswa s
+        LEFT JOIN kelas k ON s.kelas_id = k.id
+        LEFT JOIN users u ON s.user_id  = u.id
+        $where
+        ORDER BY s.id DESC
+        LIMIT $perPage OFFSET $offset
+    ");
+    $stmt->execute($params);
+    $students = $stmt->fetchAll();
+
+    // Stats
+    $today      = date('Y-m-d');
+    $totalSiswa = (int) $pdo->query('SELECT COUNT(*) FROM siswa WHERE status = "aktif"')->fetchColumn();
+
+    $aktifStmt = $pdo->prepare('SELECT COUNT(DISTINCT siswa_id) FROM absensi WHERE tanggal_absensi = ? AND status_kehadiran = "hadir"');
+    $aktifStmt->execute([$today]);
+    $aktifHariIni = (int) $aktifStmt->fetchColumn();
+
+    $persenKehadiran = $totalSiswa > 0 ? round(($aktifHariIni / $totalSiswa) * 100) : 0;
+
+} catch (PDOException $e) {
+    $dbError = $e->getMessage();
 }
-
-$countStmt = $pdo->prepare("SELECT COUNT(*) FROM siswa s $where");
-$countStmt->execute($params);
-$totalRows  = (int) $countStmt->fetchColumn();
-$totalPages = max(1, (int) ceil($totalRows / $perPage));
-$page       = min($page, $totalPages);
-$offset     = ($page - 1) * $perPage;
-
-$stmt = $pdo->prepare("
-    SELECT s.id, s.nis, s.nama_siswa, s.jenis_kelamin, s.foto, s.status, s.barcode,
-           k.nama_kelas,
-           u.email
-    FROM   siswa s
-    LEFT JOIN kelas k ON s.kelas_id = k.id
-    LEFT JOIN users u ON s.user_id  = u.id
-    $where
-    ORDER BY s.id DESC
-    LIMIT $perPage OFFSET $offset
-");
-$stmt->execute($params);
-$students = $stmt->fetchAll();
-
-// Stats
-$today   = date('Y-m-d');
-$totalSiswa = (int) $pdo->query('SELECT COUNT(*) FROM siswa WHERE status = "aktif"')->fetchColumn();
-
-$aktifStmt = $pdo->prepare('SELECT COUNT(DISTINCT siswa_id) FROM absensi WHERE tanggal_absensi = ? AND status_kehadiran = "hadir"');
-$aktifStmt->execute([$today]);
-$aktifHariIni = (int) $aktifStmt->fetchColumn();
-
-$persenKehadiran = $totalSiswa > 0 ? round(($aktifHariIni / $totalSiswa) * 100) : 0;
 
 // Flash messages
 $flash = '';
@@ -94,6 +107,14 @@ require_once $basePath . 'includes/header.php';
                         <?= $type === 'success' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-600' ?>">
                 <i class="bi <?= $type === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle' ?>"></i>
                 <?= htmlspecialchars($msg) ?>
+            </div>
+            <?php endif; ?>
+
+            <?php if ($dbError): ?>
+            <div class="px-4 py-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                <p class="font-semibold mb-1"><i class="bi bi-database-exclamation me-1"></i> Database belum siap</p>
+                <p class="text-xs text-red-500">Pastikan sudah import <code>database/absensi.sql</code> via phpMyAdmin.</p>
+                <p class="text-xs text-red-400 mt-1 font-mono"><?= htmlspecialchars($dbError) ?></p>
             </div>
             <?php endif; ?>
 
