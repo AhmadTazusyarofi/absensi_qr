@@ -21,8 +21,14 @@ try {
 
     if (in_array($role, ['admin', 'guru'])) {
         $totalSiswa   = (int) $pdo->query('SELECT COUNT(*) FROM siswa WHERE status = "aktif"')->fetchColumn();
-        $hadirHariIni = (int) $pdo->query("SELECT COUNT(*) FROM absensi WHERE tanggal_absensi = '{$today}' AND status_kehadiran = 'hadir'")->fetchColumn();
-        $absenHariIni = (int) $pdo->query("SELECT COUNT(*) FROM absensi WHERE tanggal_absensi = '{$today}' AND status_kehadiran IN ('izin','sakit','alfa')")->fetchColumn();
+
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM absensi WHERE tanggal_absensi = ? AND status_kehadiran = ?');
+        $stmt->execute([$today, 'hadir']);
+        $hadirHariIni = (int) $stmt->fetchColumn();
+
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM absensi WHERE tanggal_absensi = ? AND status_kehadiran IN (?,?,?)');
+        $stmt->execute([$today, 'izin', 'sakit', 'alfa']);
+        $absenHariIni = (int) $stmt->fetchColumn();
 
         $stmt = $pdo->prepare("
             SELECT s.nama_siswa, k.nama_kelas, a.waktu_scan, a.status_kehadiran
