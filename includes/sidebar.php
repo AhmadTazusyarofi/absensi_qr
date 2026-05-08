@@ -17,7 +17,7 @@ function sidebarLink(string $href, string $icon, string $label, string $current)
 }
 ?>
 
-<aside id="sidebar" class="w-64 min-h-screen flex flex-col shrink-0 bg-white border-r border-gray-200 transition-all duration-300 overflow-hidden">
+<aside id="sidebar" class="w-64 h-screen flex flex-col shrink-0 bg-white border-r border-gray-200 transition-all duration-300 overflow-hidden sticky top-0">
 
     <!-- Brand -->
     <div class="sidebar-brand flex items-center gap-3 px-5 py-4 border-b border-gray-100">

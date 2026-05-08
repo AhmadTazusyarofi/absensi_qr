@@ -53,15 +53,15 @@ $statusBadge = [
 ];
 ?>
 
-<div class="flex min-h-screen bg-gray-50">
+<div class="flex h-screen overflow-hidden bg-gray-50">
 
     <?php require_once 'includes/sidebar.php'; ?>
 
-    <div class="flex-1 flex flex-col min-w-0">
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         <?php require_once 'includes/navbar.php'; ?>
 
-        <main class="flex-1 p-6 space-y-6">
+        <main class="flex-1 p-6 space-y-6 overflow-y-auto">
 
             <!-- Heading -->
             <div>
