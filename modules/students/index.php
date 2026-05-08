@@ -37,11 +37,10 @@ try {
 
     $stmt = $pdo->prepare("
         SELECT s.id, s.nis, s.nama_siswa, s.jenis_kelamin, s.foto, s.status, s.barcode,
-               k.nama_kelas,
-               u.email
+               s.no_hp,
+               k.nama_kelas
         FROM   siswa s
         LEFT JOIN kelas k ON s.kelas_id = k.id
-        LEFT JOIN users u ON s.user_id  = u.id
         $where
         ORDER BY s.id DESC
         LIMIT $perPage OFFSET $offset
@@ -212,7 +211,7 @@ require_once $basePath . 'includes/header.php';
 
                                 <td class="px-5 py-4">
                                     <p class="font-semibold text-gray-800"><?= htmlspecialchars($s['nama_siswa']) ?></p>
-                                    <p class="text-xs text-gray-400"><?= htmlspecialchars($s['email'] ?? '-') ?></p>
+                                    <p class="text-xs text-gray-400"><?= htmlspecialchars($s['no_hp'] ?? '-') ?></p>
                                 </td>
 
                                 <td class="px-5 py-4 text-gray-600 font-mono text-xs"><?= htmlspecialchars($s['nis']) ?></td>
