@@ -128,9 +128,15 @@ require_once $basePath . 'includes/header.php';
                     <h2 class="text-2xl font-bold text-gray-800">Log Kehadiran</h2>
                     <p class="text-gray-400 text-sm mt-0.5">Riwayat absensi siswa berdasarkan tanggal dan kelas</p>
                 </div>
+                <?php
+                $hari_id  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+                $bulan_id = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                $ts       = strtotime($filterDate);
+                $tgl_indo = $hari_id[date('w', $ts)] . ', ' . date('d', $ts) . ' ' . $bulan_id[(int)date('n', $ts) - 1] . ' ' . date('Y', $ts);
+                ?>
                 <div class="text-sm text-gray-500 bg-white border border-gray-200 rounded-xl px-4 py-2.5 font-medium">
                     <i class="bi bi-calendar3 me-1.5 text-primary"></i>
-                    <?= date('l, d F Y', strtotime($filterDate)) ?>
+                    <?= $tgl_indo ?>
                 </div>
             </div>
 
